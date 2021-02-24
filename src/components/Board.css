@@ -1,7 +1,18 @@
-.board {
+.board{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.board__container {
     display: flex;
     flex-wrap: wrap;
     width: 400px;
     height: 300px;
-  }
-  
+}
+
+.board__score{
+  color: white;
+  font-size: 2rem;
+  font-weight: bolder;
+  text-transform: uppercase;
+}

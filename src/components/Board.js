@@ -1,132 +1,119 @@
 import React, { Component } from 'react'
 import Card from './Card';
 import './Board.css';
+import cardList from '../data/cardList';
+import BoardScore from './BoardScore';
 
-const cardArray = [
-    {
-      id:0,
-      name: 'fries',
-      img: './images/fries.png',
-      hidden: true
-    },
-    {
-      id:1,
-      name: 'cheeseburger',
-      img: './images/cheeseburger.png',
-      hidden: true
-    },
-    {
-      id:2,
-      name: 'ice-cream',
-      img: './images/ice-cream.png',
-      hidden: true
-    },
-    {
-      id:3,
-      name: 'pizza',
-      img: './images/pizza.png',
-      hidden: true
-    },
-    {
-        id:4,
-      name: 'milkshake',
-      img: './images/milkshake.png',
-      hidden: true
-    },
-    {
-        id:5,
-      name: 'hotdog',
-      img: './images/hotdog.png',
-      hidden: true
-    },
-    {
-        id:6,
-      name: 'fries',
-      img: './images/fries.png',
-      hidden: true
-    },
-    {
-        id:7,
-      name: 'cheeseburger',
-      img: './images/cheeseburger.png',
-      hidden: true
-    },
-    {
-        id:8,
-      name: 'ice-cream',
-      img: './images/ice-cream.png',
-      hidden: true
-    },
-    {
-        id:9,
-      name: 'pizza',
-      img: './images/pizza.png',
-      hidden: true
-    },
-    {
-        id:10,
-      name: 'milkshake',
-      img: './images/milkshake.png',
-      hidden: true
-    },
-    {
-        id:11,
-      name: 'hotdog',
-      img: './images/hotdog.png',
-      hidden: true
-    }
-  ]
-cardArray.sort(() => 0.5 - Math.random())
 export default class Board extends Component {
     constructor(props){
         super(props);
-        this.DEFAULT_URL = './images/blank.png';
+        this.DEFAULT_URL = './images/card.png';
+        this.WHITE_URL = './images/white.png'
         this.state = {
             firstChosenCard:null,
-            cardsWon:[]
+            cardsWon:[],
+            cardArray:[]
         }
         this.addChosenCard = this.addChosenCard.bind(this);
+        this.reset = this.reset.bind(this);
     }
 
-    addChosenCard(item, index){
+    componentDidMount() {
+      this.reset();
+    }
+
+    reset(){
+      console.log(this.state.cardArray);
+      const customCardList = cardList.map(item =>{
+        let customItem = item;
+        customItem.hidden = false;
+        return item;
+      });
+      console.log(customCardList);
+      this.setState({
+        ...this.state,
+        cardArray: customCardList,
+        cardsWon:[],
+        firstChosenCard:null
+      });
+    }
+
+    addChosenCard(itemReference, index){
+        //console.log(itemReference.current.dataset.id);
         if(this.state.firstChosenCard === null){
             this.setState({
                 ...this.state,
-                firstChosenCard:item
+                firstChosenCard:itemReference
             });
         }else if(this.state.firstChosenCard) {
-            setTimeout(this.checkForMatch(item),2000);
+            let delay = setTimeout(() => {
+              this.checkForMatch(itemReference);
+            }, 500);
         }
     }
 
     checkForMatch(secondChosenCard){
-        if(this.state.firstChosenCard.id === secondChosenCard.id){
-            alert('you clicke the same image twice')
-        }else if(this.state.firstChosenCard.name === secondChosenCard.name){
+        const {firstChosenCard} = this.state;
+        if(firstChosenCard.current.dataset.id === secondChosenCard.current.dataset.id){
             this.setState({
-                ...this.state,
-                cardsWon: [...this.state.cardsWon, [ this.state.firstChosenCard, secondChosenCard]]
-            })
+              ...this.state,
+              firstChosenCard: null
+          })
+            alert('you clicked the same image twice')
+        }else if(firstChosenCard.current.alt === secondChosenCard.current.alt){
+            this.changeItemsToHidden(firstChosenCard, secondChosenCard);
             alert('match correct !!');
         }else{
-            alert('Sorry, try again');
+            this.setState({
+              ...this.state,
+              firstChosenCard: null
+            })
+            alert('failes, another chance?');
         }
-        
+        firstChosenCard.current.src = this.DEFAULT_URL;
+        secondChosenCard.current.src = this.DEFAULT_URL;
+    }
 
+    changeItemsToHidden(firstItem, secondItem){
+      const { cardArray } = this.state;
+      const customCardArray = cardArray.map((item) => {
+        const firstAlt = firstItem.current.alt;
+        const secondAlt = secondItem.current.alt;
+        if(item.name === firstAlt || item.name === secondAlt){
+          console.log('entra a true');
+          item.hidden=true;
+        }
+        return item;
+      });
+      console.log(customCardArray);
+      this.setState({
+          ...this.state,
+          cardArray: customCardArray,
+          firstChosenCard: null,
+          cardsWon: [...this.state.cardsWon, [ firstItem, secondItem]]
+      })
     }
 
   render() {
+    const { cardArray, cardsWon } = this.state;
+    console.log('render board')
     return (
       <div className="board">
-        {cardArray && cardArray.map((item,index)=>{
-            return (<div index={index}>
-                <Card 
+        <div className="board__container">
+          {cardArray && cardArray.map((item,index)=>{
+              return (
+                <div key={index}>
+                  <Card 
                     url={this.DEFAULT_URL}
                     item={item}
-                    addChosenCard={this.addChosenCard}      
-                />
-            </div>);
-        })}
+                    addChosenCard={this.addChosenCard}  
+                    index={index}    
+                  />
+                </div>
+              );
+          })}
+        </div>
+        <BoardScore cardsWonLength={cardsWon.length} reset={this.reset} />
       </div>
     )
   }
